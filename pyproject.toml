@@ -1,0 +1,97 @@
+[build-system]
+requires = ["setuptools>=61.0", "setuptools-scm>=8.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spinel"
+dynamic = ["version"]
+authors = [
+    {name = "Happy Raven Labs"},
+]
+
+description = "Profiling made simple"
+readme = "./README.md"
+license-files= ["./LICENSE"]
+
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Topic :: Software Development :: Debuggers",
+    "Topic :: Software Development :: Testing",
+    "Topic :: System :: Benchmark",
+    "Topic :: System :: Monitoring",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.4",
+    "Programming Language :: Python :: 3.5",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+    "Environment :: Console",
+]
+
+keywords = [
+    "profiling",
+    "performance",
+    "benchmarking",
+    "monitoring",
+    "optimization",
+    "timing",
+    "analysis",
+    "measurement",
+    "debugging",
+    "code-analysis"
+]
+requires-python = ">=3.4"
+dependencies = [
+    "rich"
+]
+
+[project.optional-dependencies]
+dev = [
+    "isort",
+    "black",
+    "pre-commit",
+    "autoflake",
+    "pytest"
+]
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.dynamic]
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.setuptools.package-data]
+"*" = [
+    "LICENSE",
+    "CONTRIBUTING.md",
+]
+
+[tool.isort]
+profile = "black"
+include_trailing_comma = true
+line_length = 79
+overwrite_in_place = true
+use_parentheses = true
+
+[tool.black]
+line_length = 79
+preview = true
+
+[project.scripts]
+spinel = "cli:main"
+
+[tool.setuptools_scm]
+version_scheme = "release-branch-semver"
+version_file = "_version.py"
+tag_regex = "^v(?P<version>.*)$"
+local_scheme = "no-local-version"
