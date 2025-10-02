@@ -3,15 +3,15 @@ requires = ["setuptools>=61.0", "setuptools-scm>=8.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "spinel"
+name = "pyu"
 dynamic = ["version"]
 authors = [
     {name = "Happy Raven Labs"},
 ]
 
-description = "Profiling made simple"
+description = "Utilities for Python"
 readme = "./README.md"
-license-files= ["./LICENSE"]
+license = {file = "./LICENSE"}
 
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -48,7 +48,7 @@ keywords = [
     "debugging",
     "code-analysis"
 ]
-requires-python = ">=3.4"
+requires-python = ">=3.8"
 dependencies = [
     "rich"
 ]
@@ -59,7 +59,8 @@ dev = [
     "black",
     "pre-commit",
     "autoflake",
-    "pytest"
+    "pytest",
+    "pre-commit"
 ]
 
 [tool.setuptools]
