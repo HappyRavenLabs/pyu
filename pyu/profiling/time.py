@@ -83,6 +83,7 @@ class LineTimer:
         _prev_line = None
         _prev_time = time.perf_counter()
         _last_line = None
+        _with_line = _root_frame.f_lineno
 
         def _trace(frame, event: str, arg):
             nonlocal _prev_line, _prev_time, _last_line
@@ -98,8 +99,8 @@ class LineTimer:
             filename = frame.f_code.co_filename
             lineno = frame.f_lineno
             _prev_line = (filename, lineno)
-            _last_line = lineno
             _prev_time = current_time
+
             return _trace
 
         _root_frame.f_trace = _trace
@@ -107,9 +108,13 @@ class LineTimer:
         try:
             yield
         finally:
-            current_time = time.perf_counter()
-            _line_time[(_root_file, _last_line)].append(
-                current_time - _prev_time
+            if _prev_line is not None:
+                end_time = time.perf_counter()
+                _line_time[_prev_line].append(end_time - _prev_time)
+            _line_time = dict(
+                filter(
+                    lambda item: item[0][1] != _with_line, _line_time.items()
+                )
             )
             print_line_report(out, _line_time, _root_file)
             sys.settrace(_org_trace)

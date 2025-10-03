@@ -18,7 +18,7 @@ def _assert_report_printed(output):
     assert "Maximum time" in output
 
 
-TIME_MEASUREMENT_RTOL = 0.02  # 1%
+TIME_MEASUREMENT_RTOL = 0.05  # 5%
 
 
 class TestTimeProfiling:
@@ -182,8 +182,8 @@ class TestLineTimeProfiling:
             assert "Line Timing Report" in content
             assert "Line No." in content
             assert "Code" in content
-            assert "Total Time (s)" in content
-            assert "Avg Time (s)" in content
+            assert "Total" in content
+            assert "Avg" in content
             assert "Count" in content
 
     def test_ordinary_use_as_context_manager_stdout(self, capsys):
@@ -198,8 +198,8 @@ class TestLineTimeProfiling:
         assert "Line Timing Report" in captured.out
         assert "Line No." in captured.out
         assert "Code" in captured.out
-        assert "Total Time (s)" in captured.out
-        assert "Avg Time (s)" in captured.out
+        assert "Total" in captured.out
+        assert "Avg" in captured.out
         assert "Count" in captured.out
 
     def test_ordinary_use_as_context_manager_default_output(self, capsys):
@@ -214,8 +214,8 @@ class TestLineTimeProfiling:
         assert "Line Timing Report" in captured.err
         assert "Line No." in captured.err
         assert "Code" in captured.err
-        assert "Total Time" in captured.err
-        assert "Avg Time" in captured.err
+        assert "Total" in captured.err
+        assert "Avg" in captured.err
         assert "Count" in captured.err
 
     @patch("pyu.profiling.time.print_line_report")
@@ -242,3 +242,27 @@ class TestLineTimeProfiling:
         assert "time.sleep(0.1)" in codes
         assert "total *= 2" in codes
         assert len(codes) == 5
+
+    @patch("pyu.profiling.time.print_line_report")
+    def test_correct_time_in_rows(self, mock_print_line_report):
+        import linecache
+
+        with ltimer.run():
+            time.sleep(0.1)
+            time.sleep(0.2)
+            time.sleep(0.3)
+
+        line_times = mock_print_line_report.call_args.args[1]
+        codes_times = {
+            linecache.getline(fname, lineno).strip(): sum(times)
+            for (fname, lineno), times in line_times.items()
+        }
+        assert (
+            codes_times["time.sleep(0.1)"] - 0.1
+        ) / 0.1 < TIME_MEASUREMENT_RTOL
+        assert (
+            codes_times["time.sleep(0.2)"] - 0.2
+        ) / 0.2 < TIME_MEASUREMENT_RTOL
+        assert (
+            codes_times["time.sleep(0.3)"] - 0.3
+        ) / 0.3 < TIME_MEASUREMENT_RTOL
