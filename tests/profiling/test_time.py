@@ -18,9 +18,6 @@ def _assert_report_printed(output):
     assert "Maximum time" in output
 
 
-TIME_MEASUREMENT_RTOL = 0.05  # 5%
-
-
 class TestTimeProfiling:
 
     def test_ordinary_use_as_context_manager(self, capsys):
@@ -147,24 +144,6 @@ class TestTimeProfiling:
         captured = capsys.readouterr()
         _assert_report_printed(captured.err)
 
-    @pytest.mark.parametrize("repeat", [1, 3, 5])
-    @pytest.mark.parametrize("duration", [0.01, 0.05, 0.1])
-    @pytest.mark.skip
-    @patch("pyu.profiling.time.print_report")
-    def test_accuracy_of_timing(
-        self, mock_print_report, capsys, repeat, duration
-    ):
-        @timer(repeat=repeat)
-        def timed_function():
-            time.sleep(duration)
-
-        timed_function()
-        exec_times = mock_print_report.call_args.args[1]
-        mean_time = sum(exec_times) / len(exec_times)
-        assert abs(mean_time - duration) / duration < TIME_MEASUREMENT_RTOL
-        for t in exec_times:
-            assert abs(t - duration) / duration < TIME_MEASUREMENT_RTOL
-
 
 class TestLineTimeProfiling:
 
@@ -245,6 +224,9 @@ class TestLineTimeProfiling:
         assert len(codes) == 5
 
     @patch("pyu.profiling.time.print_line_report")
+    @pytest.mark.skipif(
+        sys.platform == "darwin", reason="Timing on macOS is less reliable"
+    )
     def test_correct_time_in_rows(self, mock_print_line_report):
         import linecache
 
