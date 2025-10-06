@@ -138,7 +138,7 @@ def print_line_report(
     table.add_column("Count", style="yellow")
 
     for (filename, line_no), times in sorted(line_times.items()):
-        code_line = linecache.getline(filename, line_no).strip()
+        code_line = linecache.getline(filename, line_no).rstrip()
         stats = compute_statistics(times)
         table.add_row(
             str(line_no),
