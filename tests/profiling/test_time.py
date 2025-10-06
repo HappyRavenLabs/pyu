@@ -18,6 +18,9 @@ def _assert_report_printed(output):
     assert "Maximum time" in output
 
 
+TIME_MEASUREMENT_RTOL = 0.2  # 20% relative tolerance
+
+
 class TestTimeProfiling:
 
     def test_ordinary_use_as_context_manager(self, capsys):
