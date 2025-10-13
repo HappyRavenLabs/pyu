@@ -18,7 +18,7 @@ def _assert_report_printed(output):
     assert "Maximum time" in output
 
 
-TIME_MEASUREMENT_RTOL = 0.2  # 20% relative tolerance
+TIME_MEASUREMENT_ATOL = 0.01  # 10 ms
 
 
 class TestTimeProfiling:
@@ -147,6 +147,36 @@ class TestTimeProfiling:
         captured = capsys.readouterr()
         _assert_report_printed(captured.err)
 
+    @patch("pyu.profiling.time.print_time_report")
+    def test_recursive_function_decorator(self, print_time_report):
+        @timer
+        def recursive_function(n):
+            if n <= 1:
+                return 1
+            else:
+
+                return n * recursive_function(n - 1)
+
+        assert print_time_report.call_count == 0
+        result = recursive_function(5)
+        print_time_report.assert_called_once()
+
+    @patch("pyu.profiling.time.print_time_report")
+    def test_recursive_function_context_manager(self, print_time_report):
+
+        def recursive_function(n):
+            if n <= 1:
+                return 1
+            else:
+
+                return n * recursive_function(n - 1)
+
+        assert print_time_report.call_count == 0
+        with timer.run():
+            result = recursive_function(5)
+
+        print_time_report.assert_called_once()
+
 
 class TestLineTimeProfiling:
 
@@ -201,8 +231,8 @@ class TestLineTimeProfiling:
         assert "Avg" in captured.err
         assert "Count" in captured.err
 
-    @patch("pyu.profiling.time.print_line_report")
-    def test_correct_code_in_rows(self, mock_print_line_report):
+    @patch("pyu.profiling.time.print_line_time_report")
+    def test_correct_code_in_rows(self, mock_print_line_time_report):
         import linecache
 
         with ltimer.run():
@@ -212,7 +242,7 @@ class TestLineTimeProfiling:
             time.sleep(0.1)
             total *= 2
 
-        line_times = mock_print_line_report.call_args.args[1]
+        line_times = mock_print_line_time_report.call_args.args[1]
         codes = set(
             [
                 linecache.getline(fname, lineno).strip()
@@ -226,11 +256,11 @@ class TestLineTimeProfiling:
         assert "total *= 2" in codes
         assert len(codes) == 5
 
-    @patch("pyu.profiling.time.print_line_report")
+    @patch("pyu.profiling.time.print_line_time_report")
     @pytest.mark.skipif(
         sys.platform == "darwin", reason="Timing on macOS is less reliable"
     )
-    def test_correct_time_in_rows(self, mock_print_line_report):
+    def test_correct_time_in_rows(self, mock_print_line_time_report):
         import linecache
 
         with ltimer.run():
@@ -238,17 +268,49 @@ class TestLineTimeProfiling:
             time.sleep(0.2)
             time.sleep(0.3)
 
-        line_times = mock_print_line_report.call_args.args[1]
+        line_times = mock_print_line_time_report.call_args.args[1]
         codes_times = {
             linecache.getline(fname, lineno).strip(): sum(times)
             for (fname, lineno), times in line_times.items()
         }
         assert (
-            codes_times["time.sleep(0.1)"] - 0.1
-        ) / 0.1 < TIME_MEASUREMENT_RTOL
+            abs(codes_times["time.sleep(0.1)"] - 0.1) < TIME_MEASUREMENT_ATOL
+        )
         assert (
-            codes_times["time.sleep(0.2)"] - 0.2
-        ) / 0.2 < TIME_MEASUREMENT_RTOL
+            abs(codes_times["time.sleep(0.2)"] - 0.2) < TIME_MEASUREMENT_ATOL
+        )
         assert (
-            codes_times["time.sleep(0.3)"] - 0.3
-        ) / 0.3 < TIME_MEASUREMENT_RTOL
+            abs(codes_times["time.sleep(0.3)"] - 0.3) < TIME_MEASUREMENT_ATOL
+        )
+
+    @patch("pyu.profiling.time.print_line_time_report")
+    def test_recursive_function_decorator(self, mock_print_line_time_report):
+        @ltimer
+        def recursive_function(n):
+            if n <= 1:
+                return 1
+            else:
+
+                return n * recursive_function(n - 1)
+
+        assert mock_print_line_time_report.call_count == 0
+        result = recursive_function(5)
+        mock_print_line_time_report.assert_called_once()
+
+    @patch("pyu.profiling.time.print_line_time_report")
+    def test_recursive_function_context_manager(
+        self, mock_print_line_time_report
+    ):
+
+        def recursive_function(n):
+            if n <= 1:
+                return 1
+            else:
+
+                return n * recursive_function(n - 1)
+
+        assert mock_print_line_time_report.call_count == 0
+        with ltimer.run():
+            result = recursive_function(5)
+
+        mock_print_line_time_report.assert_called_once()
