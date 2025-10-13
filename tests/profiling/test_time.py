@@ -147,8 +147,8 @@ class TestTimeProfiling:
         captured = capsys.readouterr()
         _assert_report_printed(captured.err)
 
-    @patch("pyu.profiling.time.print_time_report")
-    def test_recursive_function_decorator(self, print_time_report):
+    @patch("pyu.profiling.writing.TimeWriter.write")
+    def test_recursive_function_decorator(self, mock_time_writer_write):
         @timer
         def recursive_function(n):
             if n <= 1:
@@ -157,12 +157,12 @@ class TestTimeProfiling:
 
                 return n * recursive_function(n - 1)
 
-        assert print_time_report.call_count == 0
+        assert mock_time_writer_write.call_count == 0
         result = recursive_function(5)
-        print_time_report.assert_called_once()
+        mock_time_writer_write.assert_called_once()
 
-    @patch("pyu.profiling.time.print_time_report")
-    def test_recursive_function_context_manager(self, print_time_report):
+    @patch("pyu.profiling.writing.TimeWriter.write")
+    def test_recursive_function_context_manager(self, mock_time_writer_write):
 
         def recursive_function(n):
             if n <= 1:
@@ -171,11 +171,11 @@ class TestTimeProfiling:
 
                 return n * recursive_function(n - 1)
 
-        assert print_time_report.call_count == 0
+        assert mock_time_writer_write.call_count == 0
         with timer.run():
             result = recursive_function(5)
 
-        print_time_report.assert_called_once()
+        mock_time_writer_write.assert_called_once()
 
 
 class TestLineTimeProfiling:
@@ -192,7 +192,7 @@ class TestLineTimeProfiling:
 
         with open(output_file, "r") as f:
             content = f.read()
-            assert "Line Timing Report" in content
+            assert "Timing Report" in content
             assert "Line No." in content
             assert "Code" in content
             assert "Total" in content
@@ -208,7 +208,7 @@ class TestLineTimeProfiling:
             total *= 2
 
         captured = capsys.readouterr()
-        assert "Line Timing Report" in captured.out
+        assert "Timing Report" in captured.out
         assert "Line No." in captured.out
         assert "Code" in captured.out
         assert "Total" in captured.out
@@ -224,15 +224,15 @@ class TestLineTimeProfiling:
             total *= 2
 
         captured = capsys.readouterr()
-        assert "Line Timing Report" in captured.err
+        assert "Timing Report" in captured.err
         assert "Line No." in captured.err
         assert "Code" in captured.err
         assert "Total" in captured.err
         assert "Avg" in captured.err
         assert "Count" in captured.err
 
-    @patch("pyu.profiling.time.print_line_time_report")
-    def test_correct_code_in_rows(self, mock_print_line_time_report):
+    @patch("pyu.profiling.writing.TimeWriter.write")
+    def test_correct_code_in_rows(self, mock_time_writer_write):
         import linecache
 
         with ltimer.run():
@@ -242,7 +242,7 @@ class TestLineTimeProfiling:
             time.sleep(0.1)
             total *= 2
 
-        line_times = mock_print_line_time_report.call_args.args[1]
+        line_times = mock_time_writer_write.call_args.args[0]
         codes = set(
             [
                 linecache.getline(fname, lineno).strip()
@@ -256,11 +256,11 @@ class TestLineTimeProfiling:
         assert "total *= 2" in codes
         assert len(codes) == 5
 
-    @patch("pyu.profiling.time.print_line_time_report")
+    @patch("pyu.profiling.writing.TimeWriter.write")
     @pytest.mark.skipif(
         sys.platform == "darwin", reason="Timing on macOS is less reliable"
     )
-    def test_correct_time_in_rows(self, mock_print_line_time_report):
+    def test_correct_time_in_rows(self, mock_time_writer_write):
         import linecache
 
         with ltimer.run():
@@ -268,7 +268,7 @@ class TestLineTimeProfiling:
             time.sleep(0.2)
             time.sleep(0.3)
 
-        line_times = mock_print_line_time_report.call_args.args[1]
+        line_times = mock_time_writer_write.call_args.args[0]
         codes_times = {
             linecache.getline(fname, lineno).strip(): sum(times)
             for (fname, lineno), times in line_times.items()
@@ -283,8 +283,8 @@ class TestLineTimeProfiling:
             abs(codes_times["time.sleep(0.3)"] - 0.3) < TIME_MEASUREMENT_ATOL
         )
 
-    @patch("pyu.profiling.time.print_line_time_report")
-    def test_recursive_function_decorator(self, mock_print_line_time_report):
+    @patch("pyu.profiling.writing.TimeWriter.write")
+    def test_recursive_function_decorator(self, mock_time_writer_write):
         @ltimer
         def recursive_function(n):
             if n <= 1:
@@ -293,14 +293,12 @@ class TestLineTimeProfiling:
 
                 return n * recursive_function(n - 1)
 
-        assert mock_print_line_time_report.call_count == 0
+        assert mock_time_writer_write.call_count == 0
         result = recursive_function(5)
-        mock_print_line_time_report.assert_called_once()
+        mock_time_writer_write.assert_called_once()
 
-    @patch("pyu.profiling.time.print_line_time_report")
-    def test_recursive_function_context_manager(
-        self, mock_print_line_time_report
-    ):
+    @patch("pyu.profiling.writing.TimeWriter.write")
+    def test_recursive_function_context_manager(self, mock_time_writer_write):
 
         def recursive_function(n):
             if n <= 1:
@@ -309,8 +307,8 @@ class TestLineTimeProfiling:
 
                 return n * recursive_function(n - 1)
 
-        assert mock_print_line_time_report.call_count == 0
+        assert mock_time_writer_write.call_count == 0
         with ltimer.run():
             result = recursive_function(5)
 
-        mock_print_line_time_report.assert_called_once()
+        mock_time_writer_write.assert_called_once()

@@ -673,7 +673,7 @@ class CSVMemoryFormatter(BaseFormatter):
 
 
 # ################
-# Concrete Writers
+# Writers
 # ################
 
 
