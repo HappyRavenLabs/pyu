@@ -14,7 +14,7 @@ from contextlib import contextmanager
 from functools import wraps
 from typing import Any, Callable, Dict, List, Optional, Set
 
-from .utils import TimeWriter
+from .writing import ReportConfig, TimeWriter
 
 
 class Timer:
@@ -30,23 +30,30 @@ class Timer:
         *,
         repeat: int = 1,
         out: Any = None,
+        precision: int = 4,
     ) -> Callable:
         """Decorator for measuring execution time of a function."""
         if func is None:
-            return self._wrap_with_arguments(repeat=repeat, out=out)
+            return self._wrap_with_arguments(
+                repeat=repeat, out=out, precision=precision
+            )
         else:
             return self._wrap_function(func)
 
     def _wrap_with_arguments(
-        self, *, repeat: int, out: Any = None
+        self, *, repeat: int, out: Any = None, precision: int = 4
     ) -> Callable:
         def wrapper(func: Callable) -> Callable:
-            return self._wrap_function(func, repeat, out)
+            return self._wrap_function(func, repeat, out, precision=precision)
 
         return wrapper
 
     def _wrap_function(
-        self, func: Callable, repeat: int = 1, out: Any = None
+        self,
+        func: Callable,
+        repeat: int = 1,
+        out: Any = None,
+        precision: int = 4,
     ) -> Callable:
         """Decorator for measuring execution time of a function."""
         _times: List[float] = []
@@ -64,7 +71,9 @@ class Timer:
                     start_time = time.perf_counter()
                     result = func(*args, **kwargs)
                     _times.append(time.perf_counter() - start_time)
-                TimeWriter(out).with_func(func, *args, **kwargs).write(_times)
+                TimeWriter(
+                    out, config=ReportConfig(precision=precision)
+                ).with_func(func, *args, **kwargs).write(_times)
                 return result
             finally:
                 if func in self._tracker.running:
@@ -73,14 +82,16 @@ class Timer:
         return wrapper
 
     @contextmanager
-    def run(self, out: Any = None):
+    def run(self, out: Any = None, precision: int = 4):
         """Context manager for measuring execution time."""
         _start_time: float = time.perf_counter()
         try:
             yield
         finally:
             _end_time: float = time.perf_counter()
-            TimeWriter(out).write([_end_time - _start_time])
+            TimeWriter(out, config=ReportConfig(precision=precision)).write(
+                [_end_time - _start_time]
+            )
 
 
 class LineTimer:
@@ -95,20 +106,25 @@ class LineTimer:
         func: Optional[Callable] = None,
         *,
         out: Any = None,
+        precision: int = 4,
     ) -> Callable:
         """Decorator for measuring execution time of a function."""
         if func is None:
-            return self._wrap_with_arguments(out=out)
+            return self._wrap_with_arguments(out=out, precision=precision)
         else:
             return self._wrap_function(func)
 
-    def _wrap_with_arguments(self, *, out: Any = None) -> Callable:
+    def _wrap_with_arguments(
+        self, *, out: Any = None, precision: int = 4
+    ) -> Callable:
         def wrapper(func: Callable) -> Callable:
-            return self._wrap_function(func, out)
+            return self._wrap_function(func, out=out, precision=precision)
 
         return wrapper
 
-    def _wrap_function(self, func: Callable, out: Any = None) -> Callable:
+    def _wrap_function(
+        self, func: Callable, out: Any = None, precision: int = 4
+    ) -> Callable:
         """Decorator for measuring execution time of a function."""
 
         @wraps(func)
@@ -163,14 +179,16 @@ class LineTimer:
                 if func in self._tracker.running:
                     self._tracker.running.remove(func)
                 sys.settrace(_org_trace)
-                TimeWriter(out).with_func(func, *args, **kwargs).write(
+                TimeWriter(
+                    out, config=ReportConfig(precision=precision)
+                ).with_func(func, *args, **kwargs).write(
                     _line_time, root_file=_root_file
                 )
 
         return wrapper
 
     @contextmanager
-    def run(self, out: Any = None):
+    def run(self, out: Any = None, precision: int = 4):
         """Context manager for measuring execution time line by line."""
         _line_time: Dict[int, List[float]] = defaultdict(list)
         _org_trace = sys.gettrace()
@@ -214,7 +232,9 @@ class LineTimer:
                     lambda item: item[0][1] != _with_line, _line_time.items()
                 )
             )
-            TimeWriter(out).write(_line_time, root_file=_root_file)
+            TimeWriter(out, config=ReportConfig(precision=precision)).write(
+                _line_time, root_file=_root_file
+            )
             sys.settrace(_org_trace)
 
 
