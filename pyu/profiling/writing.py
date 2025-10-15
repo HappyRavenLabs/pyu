@@ -220,7 +220,7 @@ class OutputTarget:
         if self.format == OutputFormat.CSV:
             yield self.target
         elif isinstance(self.target, Path):
-            with self.target.open("w") as f:
+            with self.target.open("w", encoding="utf-8") as f:
                 yield f
         else:
             yield self.target
