@@ -92,7 +92,7 @@ class TestMemoryTracer:
             dummy_var = _allocate(4096)
 
         assert output_file.exists()
-        with open(output_file, "r") as f:
+        with open(output_file, "r", encoding="utf-8") as f:
             content = f.read()
             assert "Total Memory Used" in content
 

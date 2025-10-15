@@ -43,7 +43,7 @@ class TestTimeProfiling:
             time.sleep(0.1)
 
         assert output_file.exists()
-        with open(output_file, "r") as f:
+        with open(output_file, "r", encoding="utf-8") as f:
             content = f.read()
             assert "Elapsed time:" in content
 
@@ -92,7 +92,7 @@ class TestTimeProfiling:
 
         sample_function()
         assert output_file.exists()
-        with open(output_file, "r") as f:
+        with open(output_file, "r", encoding="utf-8") as f:
             content = f.read()
             assert "Elapsed time:" in content
 
@@ -105,7 +105,7 @@ class TestTimeProfiling:
 
         sample_function()
         assert output_file.exists()
-        with open(output_file, "r") as f:
+        with open(output_file, "r", encoding="utf-8") as f:
             content = f.read()
             _assert_report_printed(content)
 
@@ -203,7 +203,7 @@ class TestLineTimeProfiling:
             time.sleep(0.1)
             total *= 2
 
-        with open(output_file, "r") as f:
+        with open(output_file, "r", encoding="utf-8") as f:
             content = f.read()
             assert "Timing Report" in content
             assert "Line No." in content

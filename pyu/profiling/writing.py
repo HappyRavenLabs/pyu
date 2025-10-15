@@ -217,9 +217,7 @@ class OutputTarget:
     @contextmanager
     def get_writer(self):
         """Get a writer for the output target"""
-        if self.format == OutputFormat.CSV:
-            yield self.target
-        elif isinstance(self.target, Path):
+        if self.format in {OutputFormat.CSV, OutputFormat.TXT}:
             with self.target.open("w", encoding="utf-8") as f:
                 yield f
         else:
@@ -308,11 +306,7 @@ class BaseProfileWriter(ABC):
             content = formatter.format_simple_metrics(values, title)
 
         with self._output.get_writer() as writer:
-            if self._output.format == OutputFormat.CSV:
-                with open(writer, "w", encoding="utf-8") as f:
-                    f.write(content)
-            else:
-                writer.write(content)
+            writer.write(content)
 
     def _generate_title(self) -> str:
         """Generate report title with function context"""
