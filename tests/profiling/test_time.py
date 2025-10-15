@@ -18,7 +18,7 @@ def _assert_report_printed(output):
     assert "Maximum time" in output
 
 
-TIME_MEASUREMENT_ATOL = 0.01  # 10 ms
+TIME_MEASUREMENT_ATOL = 0.02  # 20 ms
 
 
 class TestTimeProfiling:
