@@ -28,13 +28,12 @@ class TestMemoryTracer:
 
     @pytest.mark.parametrize(
         "exp_mem",
-        [1024, 10 * 1024, 100 * 1024, 500 * 1024, 1024 * 1024, 1024**3],
+        [10, 1024, 10 * 1024, 100 * 1024, 500 * 1024, 1024 * 1024, 1024**3],
     )
     @patch("pyu.profiling.writing.MemoryWriter.write")
     def test_mem_usage_computed_correctly(
         self, mock_memory_writer_write, capsys, exp_mem
     ):
-
         @mem
         def sample_function():
             dummy_var = _allocate(exp_mem)

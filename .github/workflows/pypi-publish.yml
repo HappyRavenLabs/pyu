@@ -62,7 +62,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/p/spinel_kit
+      url: https://pypi.org/p/raven-pyu/
     permissions:
       id-token: write         
     steps:

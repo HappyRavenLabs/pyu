@@ -12,7 +12,7 @@ import tracemalloc
 from collections import defaultdict
 from contextlib import contextmanager
 from functools import wraps
-from typing import Any, Callable, Dict, List
+from typing import Any, Callable, Dict, List, Optional
 
 from .writing import MemoryWriter
 
@@ -25,7 +25,7 @@ class MemTracer:
         self._tracker.running: set[Callable] = set()
 
     def __call__(
-        self, func: Callable | None = None, repeat: int = 1, out: Any = None
+        self, func: Optional[Callable] = None, repeat: int = 1, out: Any = None
     ) -> Callable:
         """Decorator for measuring memory usage of a function."""
         if func is None:
@@ -90,7 +90,7 @@ class LineMemoryTracer:
         self._tracker.running: set[Callable] = set()
 
     def __call__(
-        self, func: Callable | None = None, out: Any = None
+        self, func: Optional[Callable] = None, out: Any = None
     ) -> Callable:
         """Decorator for measuring memory usage of a function."""
         if func is None:
