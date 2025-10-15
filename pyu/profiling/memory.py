@@ -79,8 +79,8 @@ class MemTracer:
         finally:
             peak = tracemalloc.get_traced_memory()[1]
             tracemalloc.stop()
+            MemoryWriter(output_target=out).write([peak])
 
-        MemoryWriter(output_target=out).write([peak])
 
 
 class LineMemoryTracer:

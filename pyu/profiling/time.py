@@ -71,11 +71,14 @@ class Timer:
                     start_time = time.perf_counter()
                     result = func(*args, **kwargs)
                     _times.append(time.perf_counter() - start_time)
+                return result
+            finally:
+                if not _times:
+                    _times.append(time.perf_counter() - start_time)
+
                 TimeWriter(
                     out, config=ReportConfig(precision=precision)
                 ).with_func(func, *args, **kwargs).write(_times)
-                return result
-            finally:
                 if func in self._tracker.running:
                     self._tracker.running.remove(func)
 

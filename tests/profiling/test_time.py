@@ -177,6 +177,16 @@ class TestTimeProfiling:
 
         mock_time_writer_write.assert_called_once()
 
+    def test_time_is_measured_on_error(self, mock_time_writer_write):
+        @timer
+        def buggy_function():
+            time.sleep(1)
+            return 1 / 0  # ZeroDivisionError is propagated, timing still recorded
+
+        with pytest.raises(ZeroDivisionError):
+            buggy_function()
+        mock_time_writer_write.assert_called_once()
+
 
 class TestLineTimeProfiling:
 

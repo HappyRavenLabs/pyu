@@ -105,7 +105,8 @@ with timer.run(out="results.csv"):
 @timer(precision=6)  # 6 decimal places
 def precise_timing():
     time.sleep(0.001234)
-    
+
+precise_timing()
 # Output: Elapsed time: 0.001234 seconds
 ```
 
@@ -124,6 +125,8 @@ def complex_function():
     result = sum(data)          # Line timing tracked
     return result               # Line timing tracked
 
+complex_function()
+
 # Or as context manager
 with ltimer.run():
     x = 10
@@ -135,15 +138,15 @@ with ltimer.run():
 
 **Output Example:**
 ```
-┏━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━┓
-┃ Line No. ┃ Code               ┃ Total Time (s) ┃ Avg Time (s)  ┃ Count  ┃
-┡━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━╇━━━━━━━━━┩
+┏━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━┓
+┃ Line No.┃ Code               ┃ Total Time (s) ┃ Avg Time (s)  ┃ Count  ┃
+┡━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━ ━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━┩
 │ 156     │ x = 10             │ 0.000001       │ 0.000001      │ 1      │
 │ 157     │ y = 20             │ 0.000001       │ 0.000001      │ 1      │
 │ 158     │ z = x * y          │ 0.000002       │ 0.000002      │ 1      │
 │ 159     │ time.sleep(0.1)    │ 0.100123       │ 0.100123      │ 1      │
 │ 160     │ final = z + 5      │ 0.000001       │ 0.000001      │ 1      │
-└─────────┴─────────────────────┴─────────────────┴────────────────┴─────────┘
+└─────────┴────────────────────┴────────────────┴───────────────┴────────┘
 ```
 
 ## Memory Profiling
@@ -195,6 +198,8 @@ with mem.run(out="memory_report.txt"):
 def memory_intensive_function():
     matrix = [[i * j for j in range(100)] for i in range(100)]
     return matrix
+
+memory_intensive_function()
 ```
 
 ### Line-by-Line Memory Profiling
@@ -213,14 +218,14 @@ with lmem.run():
 
 **Output Example:**
 ```
-┏━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┳━━━━━━━━━┓
-┃ Line No. ┃ Code                                     ┃ Avg Memory     ┃ Count  ┃
-┡━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━╇━━━━━━━━━┩
-│ 234     │ small_list = [1, 2, 3]                  │ 128 bytes     │ 1      │
-│ 235     │ medium_list = list(range(1000))         │ 8.79 kB       │ 1      │
-│ 236     │ large_dict = {i: i**2 for i in range...│ 368.64 kB     │ 1      │
-│ 237     │ del large_dict                          │ -360.45 kB    │ 1      │
-└─────────┴──────────────────────────────────────────┴─────────────────┴─────────┘
+┏━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━┳━━━━━━━━┓
+┃ Line No. ┃ Code                                      ┃ Avg Memory    ┃ Count  ┃
+┡━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━╇━━━━━━━━┩
+│ 234      │ small_list = [1, 2, 3]                    │ 128 bytes     │ 1      │
+│ 235      │ medium_list = list(range(1000))           │ 8.79 kB       │ 1      │
+│ 236      │ large_dict = {i: i**2 for i in range...   │ 368.64 kB     │ 1      │
+│ 237      │ del large_dict                            │ -360.45 kB    │ 1      │
+└──────────┴───────────────────────────────────────────┴───────────────┴────────┘
 ```
 
 ## Advanced Usage
@@ -272,7 +277,7 @@ Maximum time,0.1234
 #### Rich Console Output
 The console output uses the [Rich library](https://rich.readthedocs.io/) for beautiful, colorful tables with proper formatting and alignment.
 
-## Configuration
+<!-- ## Configuration
 
 ### Report Configuration
 
@@ -287,7 +292,7 @@ config = ReportConfig(
 )
 
 # Use with custom configuration (implementation may vary)
-```
+``` -->
 
 ## Best Practices
 
@@ -322,19 +327,6 @@ def fast_algorithm(data):
     return sorted(data)
 
 # Compare CSV files to measure improvement
-```
-
-### Memory Leak Detection
-
-```python
-@mem(repeat=100)
-def potentially_leaky_function():
-    # If memory usage grows across runs, you may have a leak
-    cache = {}
-    for i in range(1000):
-        cache[i] = [0] * 100
-    # Missing cache.clear() would show growing memory usage
-    cache.clear()
 ```
 
 ### Batch Profiling
@@ -377,6 +369,9 @@ def my_function():
 # The profilers gracefully handle exceptions in your code
 @timer
 def buggy_function():
+    import time
+    
+    time.sleep(1)
     return 1 / 0  # ZeroDivisionError is propagated, timing still recorded
 ```
 
