@@ -1,5 +1,5 @@
-
 EPS = 1e-12
+
 
 def assert_approx_equal(a: float, b: float, rtol: float = 1e-6) -> None:
     """Assert that two floating-point numbers are approximately equal."""
