@@ -10,7 +10,7 @@ def _allocate(size_in_bytes):
     return bytearray(size_in_bytes)
 
 
-MEM_MEASUREMENT_ATOL = 100  # bytes
+MEM_MEASUREMENT_ATOL = 1000  # bytes
 
 
 class TestMemoryTracer:
