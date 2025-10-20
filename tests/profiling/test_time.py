@@ -24,14 +24,14 @@ TIME_MEASUREMENT_ATOL = 0.02  # 20 ms
 class TestTimeProfiling:
 
     def test_ordinary_use_as_context_manager(self, capsys):
-        with timer.run():
+        with timer():
             time.sleep(0.1)
 
         captured = capsys.readouterr()
         assert "Elapsed time:" in captured.err
 
     def test_ordinary_use_as_context_manager_stdout(self, capsys):
-        with timer.run(sys.stdout):
+        with timer(out=sys.stdout):
             time.sleep(0.1)
 
         captured = capsys.readouterr()
@@ -39,7 +39,7 @@ class TestTimeProfiling:
 
     def test_ordinary_use_as_context_manager_file(self, tmp_path):
         output_file = tmp_path / "timing_report.txt"
-        with timer.run(output_file):
+        with timer(out=output_file):
             time.sleep(0.1)
 
         assert output_file.exists()
@@ -48,7 +48,7 @@ class TestTimeProfiling:
             assert "Elapsed time:" in content
 
     def test_decorator_single_run(self, capsys):
-        @timer
+        @timer()
         def sample_function():
             time.sleep(0.1)
 
@@ -149,7 +149,7 @@ class TestTimeProfiling:
 
     @patch("pyu.profiling.writing.TimeWriter.write")
     def test_recursive_function_decorator(self, mock_time_writer_write):
-        @timer
+        @timer()
         def recursive_function(n):
             if n <= 1:
                 return 1
@@ -172,14 +172,14 @@ class TestTimeProfiling:
                 return n * recursive_function(n - 1)
 
         assert mock_time_writer_write.call_count == 0
-        with timer.run():
+        with timer():
             result = recursive_function(5)
 
         mock_time_writer_write.assert_called_once()
 
     @patch("pyu.profiling.writing.TimeWriter.write")
     def test_time_is_measured_on_error(self, mock_time_writer_write):
-        @timer
+        @timer()
         def buggy_function():
             time.sleep(1)
             return (
@@ -190,13 +190,38 @@ class TestTimeProfiling:
             buggy_function()
         mock_time_writer_write.assert_called_once()
 
+    def test_access_via_stats_attribute_context_manager(self):
+        t = timer()
+        with t:
+            time.sleep(0.1)
+
+        stats = t.stats
+        assert len(stats.values) == 1
+        assert abs(stats.mean - 0.1) < TIME_MEASUREMENT_ATOL
+        assert abs(stats.median - 0.1) < TIME_MEASUREMENT_ATOL
+        assert abs(stats.stddev) < TIME_MEASUREMENT_ATOL
+
+    def test_access_via_stats_attribute_decorator(self):
+        t = timer(repeat=4)
+
+        @t
+        def sample_function():
+            time.sleep(0.1)
+
+        sample_function()
+        stats = t.stats
+        assert len(t.stats.values) == 4
+        assert abs(stats.mean - 0.1) < TIME_MEASUREMENT_ATOL
+        assert abs(stats.median - 0.1) < TIME_MEASUREMENT_ATOL
+        assert abs(stats.stddev) < TIME_MEASUREMENT_ATOL
+
 
 class TestLineTimeProfiling:
 
     def test_ordinary_use_as_context_manager_file(self, tmp_path):
         output_file = tmp_path / "line_timing_report.txt"
 
-        with ltimer.run(out=output_file):
+        with ltimer(out=output_file):
             total = 0
             for i in range(5):
                 total += i
@@ -213,7 +238,7 @@ class TestLineTimeProfiling:
             assert "Count" in content
 
     def test_ordinary_use_as_context_manager_stdout(self, capsys):
-        with ltimer.run(out=sys.stdout):
+        with ltimer(out=sys.stdout):
             total = 0
             for i in range(5):
                 total += i
@@ -229,7 +254,7 @@ class TestLineTimeProfiling:
         assert "Count" in captured.out
 
     def test_ordinary_use_as_context_manager_default_output(self, capsys):
-        with ltimer.run():
+        with ltimer():
             total = 0
             for i in range(5):
                 total += i
@@ -248,7 +273,7 @@ class TestLineTimeProfiling:
     def test_correct_code_in_rows(self, mock_time_writer_write):
         import linecache
 
-        with ltimer.run():
+        with ltimer():
             total = 0
             for i in range(5):
                 total += i
@@ -276,7 +301,7 @@ class TestLineTimeProfiling:
     def test_correct_time_in_rows(self, mock_time_writer_write):
         import linecache
 
-        with ltimer.run():
+        with ltimer():
             time.sleep(0.1)
             time.sleep(0.2)
             time.sleep(0.3)
@@ -298,7 +323,7 @@ class TestLineTimeProfiling:
 
     @patch("pyu.profiling.writing.TimeWriter.write")
     def test_recursive_function_decorator(self, mock_time_writer_write):
-        @ltimer
+        @ltimer()
         def recursive_function(n):
             if n <= 1:
                 return 1
@@ -321,7 +346,40 @@ class TestLineTimeProfiling:
                 return n * recursive_function(n - 1)
 
         assert mock_time_writer_write.call_count == 0
-        with ltimer.run():
+        with ltimer():
             result = recursive_function(5)
 
         mock_time_writer_write.assert_called_once()
+
+    def test_access_via_stats_attribute_context_manager(self):
+        t = ltimer()
+        with t:
+            total = 0
+            for i in range(5):
+                total += i
+            time.sleep(0.1)
+            total *= 2
+
+        stats = t.stats
+        assert len(stats) >= 5
+        for (code, lineno, filename), stat in stats.items():
+            if "time.sleep(0.1)" in code:
+                assert abs(stat.mean - 0.1) < TIME_MEASUREMENT_ATOL
+
+    def test_access_via_stats_attribute_decorator(self):
+        t = ltimer()
+
+        @t
+        def sample_function():
+            total = 0
+            for i in range(5):
+                total += i
+            time.sleep(0.1)
+            total *= 2
+
+        sample_function()
+        stats = t.stats
+        assert len(stats) >= 5
+        for (code, lineno, filename), stat in stats.items():
+            if "time.sleep(0.1)" in code:
+                assert abs(stat.mean - 0.1) < TIME_MEASUREMENT_ATOL

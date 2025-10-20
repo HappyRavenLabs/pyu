@@ -17,7 +17,7 @@ class TestMemoryTracer:
 
     def test_decorator_single_run(self, capsys):
 
-        @mem
+        @mem()
         def sample_function():
             dummy_var = _allocate(1024)
             return dummy_var
@@ -34,7 +34,7 @@ class TestMemoryTracer:
     def test_mem_usage_computed_correctly(
         self, mock_memory_writer_write, capsys, exp_mem
     ):
-        @mem
+        @mem()
         def sample_function():
             dummy_var = _allocate(exp_mem)
             return dummy_var
@@ -73,14 +73,14 @@ class TestMemoryTracer:
             assert abs(mem_usage - exp_mem) < MEM_MEASUREMENT_ATOL
 
     def test_ordinary_use_as_context_manager(self, capsys):
-        with mem.run():
+        with mem():
             dummy_var = _allocate(4096)
 
         captured = capsys.readouterr()
         assert "Total Memory Used" in captured.err
 
     def test_ordinary_use_as_context_manager_stdout(self, capsys):
-        with mem.run(sys.stdout):
+        with mem(out=sys.stdout):
             dummy_var = _allocate(4096)
 
         captured = capsys.readouterr()
@@ -88,7 +88,7 @@ class TestMemoryTracer:
 
     def test_ordinary_use_as_context_manager_file(self, tmp_path):
         output_file = tmp_path / "memory_report.txt"
-        with mem.run(output_file):
+        with mem(out=output_file):
             dummy_var = _allocate(4096)
 
         assert output_file.exists()
@@ -101,7 +101,7 @@ class TestMemoryTracer:
         self, mock_memory_writer_write
     ):
         EXPECTED_USAGE = 1024 * 1024 + 678
-        with mem.run():
+        with mem():
             dummy_var = _allocate(EXPECTED_USAGE)
 
         assert (
@@ -111,7 +111,7 @@ class TestMemoryTracer:
 
     @patch("pyu.profiling.memory.MemoryWriter.write")
     def test_recursive_function_decorator(self, mock_memory_writer_write):
-        @mem
+        @mem()
         def recursive_function(n):
             if n <= 1:
                 return 1
@@ -131,7 +131,7 @@ class TestMemoryTracer:
                 return 1
             return n * recursive_function(n - 1)
 
-        with mem.run():
+        with mem():
             result = recursive_function(5)
 
         mock_memory_writer_write.assert_called_once()

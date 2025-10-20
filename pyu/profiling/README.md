@@ -21,17 +21,17 @@ from pyu.profiling import timer, ltimer, mem, lmem
 import time
 
 # Time profiling with decorator
-@timer
+@timer()
 def my_function():
     time.sleep(0.1)
     return "done"
 
 # Memory profiling with context manager
-with mem.run():
+with mem():
     data = [i for i in range(10000)]
 
 # Line-by-line time analysis
-with ltimer.run():
+with ltimer():
     total = 0
     for i in range(1000):
         total += i * 2
@@ -47,7 +47,7 @@ with ltimer.run():
 ```python
 from pyu.profiling import timer
 
-@timer
+@timer()
 def calculate_fibonacci(n):
     if n <= 1:
         return n
@@ -73,7 +73,7 @@ status = network_request()
 #### As a Context Manager
 
 ```python
-with timer.run():
+with timer():
     # Your code here
     result = sum(i**2 for i in range(10000))
 # Output: Elapsed time: 0.0045 seconds
@@ -95,7 +95,7 @@ def my_function():
     return "hello world"
 
 # Output to CSV
-with timer.run(out="results.csv"):
+with timer(out="results.csv"):
     data = [i for i in range(100000)]
 ```
 
@@ -117,7 +117,7 @@ Get detailed timing for each line of your code:
 ```python
 from pyu.profiling import ltimer
 
-@ltimer
+@ltimer()
 def complex_function():
     data = []                    # Line timing tracked
     for i in range(1000):       # Line timing tracked  
@@ -128,7 +128,7 @@ def complex_function():
 complex_function()
 
 # Or as context manager
-with ltimer.run():
+with ltimer:
     x = 10
     y = 20
     z = x * y
@@ -158,7 +158,7 @@ with ltimer.run():
 ```python
 from pyu.profiling import mem
 
-@mem
+@mem()
 def create_large_list():
     return [i for i in range(100000)]
 
@@ -180,7 +180,7 @@ result = allocate_memory()
 #### As a Context Manager
 
 ```python
-with mem.run():
+with mem:
     # Memory usage will be tracked for this block
     big_dict = {i: str(i) * 100 for i in range(10000)}
 # Output: Total Memory Used: 12.45 MB
@@ -190,7 +190,7 @@ with mem.run():
 
 ```python
 # Save to file
-with mem.run(out="memory_report.txt"):
+with mem(out="memory_report.txt"):
     data = list(range(1000000))
 
 # CSV output
@@ -209,7 +209,7 @@ Track memory allocation for each line:
 ```python
 from pyu.profiling import lmem
 
-with lmem.run():
+with lmem():
     small_list = [1, 2, 3]          # Small allocation
     medium_list = list(range(1000)) # Medium allocation  
     large_dict = {i: i**2 for i in range(10000)}  # Large allocation
@@ -247,7 +247,7 @@ result = process_data([1, -2, 3, 4], multiplier=3, use_cache=False)
 The profilers handle recursive functions intelligently, avoiding measurement interference:
 
 ```python
-@timer
+@timer()
 def factorial(n):
     if n <= 1:
         return 1
@@ -343,7 +343,6 @@ def profile_all_algorithms():
     
     for algo in algorithms:
         @timer(repeat=5, out=results_dir / f"{algo.__name__}_timing.csv")
-        @mem(repeat=5, out=results_dir / f"{algo.__name__}_memory.csv")
         def wrapped_algo(data):
             return algo(data.copy())
         
@@ -367,7 +366,7 @@ def my_function():
     pass
 
 # The profilers gracefully handle exceptions in your code
-@timer
+@timer()
 def buggy_function():
     import time
     
@@ -382,41 +381,8 @@ def buggy_function():
 - **Line profiling overhead**: Higher due to tracing, use sparingly
 - **File I/O**: CSV/TXT output adds minimal overhead, Rich console output is optimized
 
-## Thread Safety
-
-All profilers use thread-local storage and are safe for concurrent use:
-
-```python
-import threading
-import time
-
-@timer
-def worker(worker_id):
-    time.sleep(0.1)
-    return f"Worker {worker_id} done"
-
-# Safe to use in multiple threads
-threads = []
-for i in range(5):
-    t = threading.Thread(target=worker, args=(i,))
-    threads.append(t)
-    t.start()
-
-for t in threads:
-    t.join()
-```
 
 ## API Reference
-
-### Timer Classes
-
-- `timer`: Global instance of `Timer` class for function/block timing
-- `ltimer`: Global instance of `LineTimer` class for line-by-line timing
-
-### Memory Tracer Classes  
-
-- `mem`: Global instance of `MemTracer` class for function/block memory profiling
-- `lmem`: Global instance of `LineMemoryTracer` class for line-by-line memory profiling
 
 ### Common Parameters
 
@@ -431,6 +397,115 @@ for t in threads:
 - `DataValidationError`: Raised when measurement data is invalid
 
 ---
+
+## Accessing stats programmatically
+
+All profilers expose their computed summary statistics on the profiler instance after a run. The summary object is an instance of `pyu.profiling.stats.Stats` and provides cached properties you can read from code: `mean`, `median`, `mode`, `stddev`, and `sorted_values`.
+
+
+
+> [!NOTE]
+> When you use decorators, keep a reference to the decorator instance if you want to access `stats`/`usage` later. If you call the decorator directly as `@timer()` without storing it, you won't have a handle to the instance to read the property.
+
+> [!NOTE]
+> When used as a context manager (`with timer() as t:`) the context manager returns the profiler instance so you can read the values after the block.
+
+Examples:
+
+Time decorator (store decorator instance to read stats):
+
+```python
+from pyu.profiling import timer
+
+t = timer(repeat=3)
+
+@t
+def work():
+    # expensive operation
+    sum(i*i for i in range(100000))
+
+work()
+
+# Access summary statistics
+print("mean:", t.stats.mean)
+print("median:", t.stats.median)
+print("stddev:", t.stats.stddev)
+```
+
+Time context manager (use returned instance):
+
+```python
+from pyu.profiling import timer
+
+with timer() as t:
+    sum(i*i for i in range(100000))
+
+print("elapsed (s):", t.stats.mean)
+```
+
+Line-by-line time profiler (`ltimer`) — `stats` is a mapping from
+`(code_line, lineno, filename)` to `Stats`:
+
+```python
+from pyu.profiling import ltimer
+
+with ltimer() as lt:
+    total = 0
+    for i in range(10000):
+        total += i * 3
+
+# lt.stats keys are tuples: (code_line_str, lineno, filename)
+for (code, lineno, filename), stats in lt.stats.items():
+    print(f"{filename}:{lineno}: {code!s}\n  mean={stats.mean:.6f}s stddev={stats.stddev:.6f}s")
+```
+
+Memory decorator/context manager (property name is `usage`):
+
+```python
+from pyu.profiling import mem
+
+m = mem(repeat=2)
+
+@m
+def allocate():
+    return [0] * (1024 * 1024 // 8)  # allocate ~1M elements
+
+allocate()
+
+# Memory stats are in bytes
+print("peak mean (bytes):", m.usage.mean)
+print("peak mean (MB):", m.usage.mean / (1024 * 1024))
+```
+
+Line-by-line memory profiler (`lmem`) — `usage` is a mapping similar to `ltimer`:
+
+```python
+from pyu.profiling import lmem
+
+with lmem() as lm:
+    a = [i for i in range(10000)]
+    b = [i*i for i in range(10000)]
+
+for (code, lineno, filename), stats in lm.usage.items():
+    print(f"{filename}:{lineno}: {code!s}\n  mean={stats.mean / (1024*1024):.3f} MB  stddev={stats.stddev / (1024*1024):.3f} MB")
+```
+
+Programmatic tips
+
+
+> [!TIP]
+> Sort lines by a statistic (e.g. mean) to find the biggest consumers:
+> ```python
+> hot_lines = sorted(lm.usage.items(), key=lambda kv: kv[1].mean, reverse=True)
+> for (code, lineno, filename), stats in hot_lines[:10]:
+>     print(lineno, stats.mean)
+> ```
+> This approach makes it convenient to integrate profiling into automated runs or CI, save `stats` for later analysis, or convert bytes to human-friendly units when reporting memory.
+
+- 
+
+
+
 
 **Author**: Jakub Walczak  
 **Organization**: HappyRavenLabs
