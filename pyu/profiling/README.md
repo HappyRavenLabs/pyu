@@ -14,6 +14,35 @@ A powerful and flexible Python profiling toolkit for measuring execution time an
 - **Summary statistics**: Automatic computation of mean, median, standard deviation, and more
 - **Recursive Function Support**: Prevents interference in recursive calls
 
+## Table of Contents
+
+- [Quick Start](#quick-start)
+- [Time Profiling](#time-profiling)
+    - [Basic Usage](#basic-usage)
+        - [As a Decorator](#as-a-decorator)
+        - [Multiple Runs for Better Statistics](#multiple-runs-for-better-statistics)
+        - [As a Context Manager](#as-a-context-manager)
+        - [Custom Output Destinations](#custom-output-destinations)
+        - [Precision Control](#precision-control)
+    - [Line-by-Line Time Profiling](#line-by-line-time-profiling)
+- [Memory Profiling](#memory-profiling)
+    - [Basic Usage](#basic-usage-1)
+        - [As a Decorator](#as-a-decorator-1)
+        - [Multiple Runs](#multiple-runs)
+        - [As a Context Manager](#as-a-context-manager-1)
+        - [Custom Output](#custom-output)
+    - [Line-by-Line Memory Profiling](#line-by-line-memory-profiling)
+- [Advanced Usage](#advanced-usage)
+- [Output Format Examples](#output-format-examples)
+- [Best Practices](#best-practices)
+- [Common Patterns](#common-patterns)
+- [Error Handling](#error-handling)
+- [Performance Considerations](#performance-considerations)
+- [API Reference](#api-reference)
+- [Accessing stats programmatically](#accessing-stats-programmatically)
+
+
+
 ## Quick Start
 
 ```python
@@ -501,10 +530,6 @@ Programmatic tips
 >     print(lineno, stats.mean)
 > ```
 > This approach makes it convenient to integrate profiling into automated runs or CI, save `stats` for later analysis, or convert bytes to human-friendly units when reporting memory.
-
-- 
-
-
 
 
 **Author**: Jakub Walczak  
