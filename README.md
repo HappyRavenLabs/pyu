@@ -47,6 +47,22 @@ The profiling module provides powerful tools for measuring and analyzing the per
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## 📑 Cite Us
+
+```bibtex
+@misc{HappyRavenLabs_pyu,
+  author       = {HappyRavenLabs},
+  title        = {pyu: Utility tools for Python},
+  howpublished = {\url{https://github.com/HappyRavenLabs/pyu}},
+  year         = {2025},
+  note         = {Version v1.0.2 (accessed: 2025-10-28)}
+}
+```
+
+```
+HappyRavenLabs. (2025). pyu: Utility tools for Python (Version v1.0.2) [Software]. Retrieved from https://github.com/HappyRavenLabs/pyu
+```
+
 ## 🏢 About
 
 Developed with ❤️ by **Happy Raven Labs**
