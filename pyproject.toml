@@ -88,9 +88,6 @@ use_parentheses = true
 line_length = 79
 preview = true
 
-[project.scripts]
-spinel = "cli:main"
-
 [tool.setuptools_scm]
 version_scheme = "release-branch-semver"
 version_file = "_version.py"
